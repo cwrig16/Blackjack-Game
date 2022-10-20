@@ -1,6 +1,7 @@
 """This program plays a single-player game of blackjack"""
 from random import randint
 from collections import Counter
+from re import S
 
 class Cards:
     def __init__(self, suit, value, score):
@@ -9,16 +10,15 @@ class Cards:
         self.score = score
 
     def __repr__(self):
-        return "{value} {suit}".format(suit = self.suit, value = self.value)
+        return "{value}{suit}".format(suit = self.suit, value = self.value)
 
 deck =[]
 
 def make_deck():
     global deck
-    suits = ["Spades", "Clubs", "Hearts", "Diamonds"]
+    suits = ['\u2663', '\u2664', '\u2665', '\u2666']
     values = ["A", "K", "Q", "J", 10, 9, 8, 7, 6, 5, 4, 3, 2]
-    #"K", "Q", "J", 10, 9, 8, 7, 6, 5,
-    scores = {"A": 11, "K": 10, "Q": 10, "J": 10, 10: 10, 9: 9, 8: 8, 7: 7, 6: 6, 5: 5, 4: 4, 3: 3, 2: 2}
+    scores = {"A": 1, "K": 10, "Q": 10, "J": 10, 10: 10, 9: 9, 8: 8, 7: 7, 6: 6, 5: 5, 4: 4, 3: 3, 2: 2}
     
     for suit in suits:
         for value in values:
@@ -37,161 +37,311 @@ def keep_playing():
     else:
         quit()
 
-print("Welcome to Blackjack.  Enjoy the game.")
 
-player = input("Enter name: ")  
+#print("Welcome to Blackjack.  Enjoy the game.")
+
+#player = input("Enter name: ")  
 bank = float(input("Enter starting money ammount: $"))
 
 def deal():
     make_deck()
-    player_hand = []
-    player_score = 0
-    dealer_hand = []
-    dealer_score = 0
     global bank
     global deck
     while True:
+        player_hand = []
+        dealer_hand = []
         wager = float(input("Place your bet: $"))
         if wager > bank:
-            print("Can not wager more than you have. Player Bank has $" + str(bank))
+            print(f"Can not wager more than you have. Player Bank has ${bank}")
             continue
         else:
             bank -= wager
-            break
-
+            #break
+        
     # Deal and display player_hand and player_score.
-    if len(player_hand) < 2:
-        player_card_1 = deck[randint(0, len(deck) - 1)]
-        player_hand.append(player_card_1)
-        player_score += player_card_1.score
-        deck.remove(player_card_1)
-        
-        player_card_2 = deck[randint(0, len(deck) - 1)]
-        player_hand.append(player_card_2)
-        if player_card_1.score == 11 and player_card_2.score == 11:
-            player_card_2.score = 1
-            player_score += player_card_2.score
-        else:    
-            player_score += player_card_2.score
-        deck.remove(player_card_2)
-        
-        print("Player Hand: " + str(player_hand))
-        print("Player has " + str(player_score))
-        
-        if player_score == 21:
-            bank += wager + wager * 3 / 2
-            print("Blackjack!!! Player wins.")
-            print("Player Bank: $ " + str(bank))
-            keep_playing()
-            return
-    
-    # Deal dealer_hand. Display only the first card of the hand.
-    while len(dealer_hand) < 2:
-        dealer_card_1 = deck[randint(0, len(deck) - 1)]
-        #dealer_card_1 = deck[0]
-        dealer_hand.append(dealer_card_1)
-        dealer_score += dealer_card_1.score
-        deck.remove(dealer_card_1)
+        while len(player_hand) < 2:
+            player_hand.append(deck[randint(0, len(deck) - 1)])
+            deck.remove(player_hand[-1])
+            player_score = 0
+            player_aces = 0
+            for card in player_hand:
+                if isinstance(card.value, int):
+                    player_score += card.value
+                else:
+                    if card.value == "A":
+                        player_aces += 1
+                    else:
+                        player_score += 10
+            if player_aces == 1:
+                if player_score < 11:
+                    player_score += 11
+                else:
+                    player_score += 1
+            if player_aces == 2:
+                if player_score < 10:
+                    player_score += 12
+                else:
+                    player_score += 2
+            if player_aces == 3:
+                if player_score < 9:
+                    player_score += 13
+                else:
+                    player_score += 3
+            if player_aces == 4:
+                if player_score < 8:
+                    player_score += 14
+                else:
+                    player_score += 4
 
-        print("Dealer Hand: " + str(dealer_hand))
-        print("Dealer has " + str(dealer_score))
-    
-        dealer_card_2 = deck[randint(0, len(deck) - 1)]
-        dealer_hand.append(dealer_card_2)
-        if dealer_card_1.score == 11 and dealer_card_2.score == 11:
-            dealer_card_2.score = 1
-            dealer_score += dealer_card_2.score
-        else:    
-            dealer_score += dealer_card_2.score
-        deck.remove(dealer_card_2)
-
-    # Logic for player to Hit or Stand.
-    while player_score < 21:
-        play = input("Choose your play. Press 'H' for Hit or 'S' for Stand. You choose to :")
-        if play.upper() == "H":
-            player_card_3 = deck[randint(0, len(deck) - 1)]
-            player_hand.append(player_card_3)
-            player_score += player_card_3.score
-            deck.remove(player_card_3)
-            
-            #Accounts for Aces in player_hand.  Aces can be worth 11 or 1.
-            for i in player_hand:
-                while player_score > 21 and i.score == 11:
-                    i.score == 1
-                    player_score -= 10
-                    return player_score
+            print(f"Player Hand: {player_hand}", end="")  
+            print(f"   Player has {player_score}")          
+        
+            if player_score == 21:
+                bank += wager + wager * 3 / 2
+                print("Blackjack!!! Player wins.")
+                print(f"Player Bank: ${bank}")
+                keep_playing()
+                break
+        
+        # Deal dealer_hand. Display only the first card of the hand.
+        while len(dealer_hand) < 2:
+            dealer_hand.append(deck[randint(0, len(deck) - 1)])
+            deck.remove(dealer_hand[-1])
+            dealer_score = 0
+            dealer_aces = 0
+            for card in dealer_hand:
+                if isinstance(card.value, int):
+                    dealer_score += card.value
+                else:
+                    if card.value == "A":
+                        dealer_aces += 1
+                    else:
+                        dealer_score += 10
+            if dealer_aces == 1:
+                if dealer_score < 11:
+                    dealer_score += 11
+                else:
+                    dealer_score += 1
+            if dealer_aces == 2:
+                if dealer_score < 10:
+                    dealer_score += 12
+                else:
+                    dealer_score += 2
+            if dealer_aces == 3:
+                if dealer_score < 9:
+                    dealer_score += 13
+                else:
+                    dealer_score += 3
+            if dealer_aces == 4:
+                if dealer_score < 8:
+                    dealer_score += 14
+                else:
+                    dealer_score += 4
+            if len(dealer_hand) == 1:
+                print(f"Dealer Hand: {dealer_hand}", end="")  
+                print(f"   Dealer has {dealer_score}")
+            elif dealer_score == 21:
+                print(f"Dealer Hand: {dealer_hand}", end="")
+                print(f"   Dealer has {dealer_score}")
+                print("Dealer wins.")
+                keep_playing()
+                break
+            else:
+                continue
+        
+        # Logic for player to Hit or Stand.
+        while player_score < 21:
+            play = input("Choose your play. (H)it or (S)tand. You choose to :")
+            if play.upper() == "H":
+                player_hand.append(deck[randint(0, len(deck) - 1)])
+                deck.remove(player_hand[-1])
+                player_score = 0
+                player_aces = 0 
+                for card in player_hand:
+                    if isinstance(card.value, int):
+                        player_score += card.value
+                    else:
+                        if card.value == "A":
+                            player_aces += 1
+                        else:
+                            player_score += 10
+                if player_aces == 1:
+                    if player_score < 11:
+                        player_score += 11
+                    else:
+                        player_score += 1
+                if player_aces == 2:
+                    if player_score < 10:
+                        player_score += 12
+                    else:
+                        player_score += 2
+                if player_aces == 3:
+                    if player_score < 9:
+                        player_score += 13
+                    else:
+                        player_score += 3
+                if player_aces == 4:
+                    if player_score < 8:
+                        player_score += 14
+                    else:
+                        player_score += 4
                 
-                
+                #Player Busts
                 if player_score > 21:
-                    print("Player Hand: " + str(player_hand))
-                    print("Player has " + str(player_score))
+                    print(f"Player Hand: {player_hand}")
+                    print(f"Player has {player_score}")
                     print("Player Busts.")
-                    print("Player Bank: $" + str(bank))
+                    print(f"Player Bank: ${bank}")
                     keep_playing()
-                    return
-            print("Player Hand: " + str(player_hand))
-            print("Player has " + str(player_score))
-            
-        
-        elif play.upper() == "S":
-            print("Player stands at " + str(player_score))
-            break
-
-    #Dealer hand logic. Dealer stands on hard 17 and over. Dealer hits on soft 17 and under.
-    print("Dealer Hand: " + str(dealer_hand))
-    print("Dealer has " + str(dealer_score))
-    while dealer_score <= 16:
-        dealer_card_3 = deck[randint(0, len(deck) - 1)]
-        dealer_hand.append(dealer_card_3)
-        dealer_score += dealer_card_3.score
-        deck.remove(dealer_card_3)
-        for i in dealer_hand:
-            while dealer_score > 21 and i.score == 11:
-                i.score == 1
-                dealer_score -= 10
-        print("Dealer Hand: " + str(dealer_hand))
-        print("Dealer has " + str(dealer_score))
-
-        #Dealer bust
-        if dealer_score > 21:
-            bank += wager * 2
-            print("Dealer Busts!. Player wins.")
-            print("Player Bank : $" + str(bank))
-            keep_playing()
-            return
-
-    # Dealer with Ace in hand
-    for i in dealer_hand:
-        while dealer_score == 17 and i.score == 11:
-            dealer_card_3 = deck[randint(0, len(deck) - 1)]
-            dealer_hand.append(dealer_card_3)
-            dealer_score += dealer_card_3.score
-            deck.remove(dealer_card_3)
-            if dealer_score > 21:
-                i.score == 1
-                dealer_score -= 10
+                    break
+                print(f"Player Hand: {player_hand}", end="")
+                print(f"   Player has {player_score}")
+            elif play.upper() == "S":
+                print(f"Player stands at {player_score}")
                 break
 
-            print("Dealer Hand: " + str(dealer_hand))
-            print("Dealer has " + str(dealer_score))
-    
-    # Compare results and pay out winnings.
-    if player_score > dealer_score and dealer_score <= 21:
-        bank += wager * 2
-        print("Player Wins!")
-        print("Player Bank: $" + str(bank))
+        #Dealer hand logic. Dealer stands on hard 17 and over. Dealer hits on soft 17 and under.
+        print(f"Dealer Hand: {dealer_hand}", end="")
+        print(f"   Dealer has {dealer_score}")
+        while dealer_score <= 16:
+            dealer_hand.append(deck[randint(0, len(deck) - 1)])
+            deck.remove(dealer_hand[-1])
+            dealer_score = 0
+            dealer_aces = 0
+            for card in dealer_hand:
+                if isinstance(card.value, int):
+                    dealer_score += card.value
+                else:
+                    if card.value == "A":
+                        dealer_aces += 1
+                    else:
+                        dealer_score += 10
+            if dealer_aces == 1:
+                if dealer_score < 11:
+                    dealer_score += 11
+                else:
+                    dealer_score += 1
+            if dealer_aces == 2:
+                if dealer_score < 10:
+                    dealer_score += 12
+                else:
+                    dealer_score += 2
+            if dealer_aces == 3:
+                if dealer_score < 9:
+                    dealer_score += 13
+                else:
+                    dealer_score += 3
+            if dealer_aces == 4:
+                if dealer_score < 8:
+                    dealer_score += 14
+                else:
+                    dealer_score += 4
+            print(f"Dealer Hand: {dealer_hand}")
+            print(f"Dealer has {dealer_score}")
 
-    elif dealer_score > player_score:
-        print("Dealer wins.")
-        print("Player Bank: $" + str(bank))
+            #Dealer bust
+            if dealer_score > 21:
+                bank += wager * 2
+                print("Dealer Busts!. Player wins.")
+                print(f"Player Bank : ${bank}")
+                keep_playing()
+                break
 
-    else: 
-        bank += wager
-        print("Its a Tie.")
-        print("Player Bank: $" + str(bank))
+        # Dealer with Ace in hand
+        while dealer_score == 17:
+            dealer_score = 0
+            dealer_aces = 0
+            for card in dealer_hand:
+                if isinstance(card.value, int):
+                    dealer_score += card.value
+                else:
+                    if card.value == "A":
+                        dealer_aces += 1
+                    else:
+                        dealer_score += 10
+            if dealer_aces == 1:
+                if dealer_score < 11:
+                    dealer_scoree += 11
+                else:
+                    dealer_score += 1
+            if dealer_aces == 2:
+                if dealer_score < 10:
+                    dealer_score += 12
+                else:
+                    dealer_score += 2
+            if dealer_aces == 3:
+                if dealer_score < 9:
+                    dealer_score += 13
+                else:
+                    dealer_score += 3
+            if dealer_aces == 4:
+                if dealer_score < 8:
+                    dealer_score += 14
+                else:
+                    dealer_score += 4
+            if dealer_aces > 0:
+                dealer_hand.append(deck[randint(0, len(deck) - 1)])
+                deck.remove(dealer_hand[-1])
+                dealer_score = 0
+                dealer_aces = 0
+                for card in dealer_hand:
+                    if isinstance(card.value, int):
+                        dealer_score += card.value
+                    else:
+                        if card.value == "A":
+                            dealer_aces += 1
+                        else:
+                            dealer_score += 10
+                if dealer_aces == 1:
+                    if dealer_score < 11:
+                        dealer_scoree += 11
+                    else:
+                        dealer_score += 1
+                if dealer_aces == 2:
+                    if dealer_score < 10:
+                        dealer_score += 12
+                    else:
+                        dealer_score += 2
+                if dealer_aces == 3:
+                    if dealer_score < 9:
+                        dealer_score += 13
+                    else:
+                        dealer_score += 3
+                if dealer_aces == 4:
+                    if dealer_score < 8:
+                        dealer_score += 14
+                    else:
+                        dealer_score += 4
+            else:
+                break
 
-    
+            print(f"Dealer Hand: {dealer_hand}", end="")
+            print(f"   Dealer has {dealer_score}")
+        
+        # Compare results and pay out winnings.
 
-    keep_playing()
+        if player_score > 21:
+            print(f"Player Hand: {player_hand}")
+            print(f"Player has {player_score}")
+            print("Player Busts.")
+            print(f"Player Bank: ${bank}")
+            keep_playing()
+        
+        elif player_score > dealer_score and player_score <= 21:
+            bank += wager * 2
+            print("Player Wins!")
+            print(f"Player Bank: ${bank}")
+            keep_playing()
+
+        elif dealer_score > player_score and dealer_score <= 21:
+            print("Dealer wins.")
+            print(f"Player Bank: ${bank}")
+            keep_playing()
+
+        else: 
+            bank += wager
+            print("Its a Tie.")
+            print(f"Player Bank: ${bank}")
+            keep_playing()
     
 deal()
