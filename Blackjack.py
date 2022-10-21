@@ -2,6 +2,7 @@
 from random import randint
 from collections import Counter
 from re import S
+from tkinter import Y
 
 class Cards:
     def __init__(self, suit, value, score):
@@ -17,7 +18,8 @@ deck =[]
 def make_deck():
     global deck
     suits = ['\u2663', '\u2664', '\u2665', '\u2666']
-    values = ["A", "K", "Q", "J", 10, 9, 8, 7, 6, 5, 4, 3, 2]
+    values = [6, 5]
+    #"A", "K", "Q", "J", 10, 9, 8, 7, 6, 5, 4, 3, 2
     scores = {"A": 1, "K": 10, "Q": 10, "J": 10, 10: 10, 9: 9, 8: 8, 7: 7, 6: 6, 5: 5, 4: 4, 3: 3, 2: 2}
     
     for suit in suits:
@@ -36,7 +38,6 @@ def keep_playing():
         keep_playing()
     else:
         quit()
-
 
 #print("Welcome to Blackjack.  Enjoy the game.")
 
@@ -151,54 +152,143 @@ def deal():
         
         # Logic for player to Hit or Stand.
         while player_score < 21:
-            play = input("Choose your play. (H)it or (S)tand. You choose to :")
-            if play.upper() == "H":
-                player_hand.append(deck[randint(0, len(deck) - 1)])
-                deck.remove(player_hand[-1])
-                player_score = 0
-                player_aces = 0 
-                for card in player_hand:
-                    if isinstance(card.value, int):
-                        player_score += card.value
-                    else:
-                        if card.value == "A":
-                            player_aces += 1
+            if player_score >= 10 and player_score <= 11 and wager < bank:
+                play_double = (input("Choose your play. (H)it, (S)tand, or (D)ouble. You choose to :"))
+                if play_double.upper() == "D":
+                    print(f"Player has doubled down. Wager increaded to ${wager * 2}")
+                    bank -= wager
+                    wager += wager
+                    player_hand.append(deck[randint(0, len(deck) - 1)])
+                    deck.remove(player_hand[-1])
+                    player_score = 0
+                    player_aces = 0 
+                    for card in player_hand:
+                        if isinstance(card.value, int):
+                            player_score += card.value
                         else:
-                            player_score += 10
-                if player_aces == 1:
-                    if player_score < 11:
-                        player_score += 11
-                    else:
-                        player_score += 1
-                if player_aces == 2:
-                    if player_score < 10:
-                        player_score += 12
-                    else:
-                        player_score += 2
-                if player_aces == 3:
-                    if player_score < 9:
-                        player_score += 13
-                    else:
-                        player_score += 3
-                if player_aces == 4:
-                    if player_score < 8:
-                        player_score += 14
-                    else:
-                        player_score += 4
-                
-                #Player Busts
-                if player_score > 21:
+                            if card.value == "A":
+                                player_aces += 1
+                            else:
+                                player_score += 10
+                    if player_aces == 1:
+                        if player_score < 11:
+                            player_score += 11
+                        else:
+                            player_score += 1
+                    if player_aces == 2:
+                        if player_score < 10:
+                            player_score += 12
+                        else:
+                            player_score += 2
+                    if player_aces == 3:
+                        if player_score < 9:
+                            player_score += 13
+                        else:
+                            player_score += 3
+                    if player_aces == 4:
+                        if player_score < 8:
+                            player_score += 14
+                        else:
+                            player_score += 4
                     print(f"Player Hand: {player_hand}")
                     print(f"Player has {player_score}")
-                    print("Player Busts.")
-                    print(f"Player Bank: ${bank}")
-                    keep_playing()
                     break
-                print(f"Player Hand: {player_hand}", end="")
-                print(f"   Player has {player_score}")
-            elif play.upper() == "S":
-                print(f"Player stands at {player_score}")
-                break
+                elif play_double.upper() == "H":
+                    player_hand.append(deck[randint(0, len(deck) - 1)])
+                    deck.remove(player_hand[-1])
+                    player_score = 0
+                    player_aces = 0 
+                    for card in player_hand:
+                        if isinstance(card.value, int):
+                            player_score += card.value
+                        else:
+                            if card.value == "A":
+                                player_aces += 1
+                            else:
+                                player_score += 10
+                    if player_aces == 1:
+                        if player_score < 11:
+                            player_score += 11
+                        else:
+                            player_score += 1
+                    if player_aces == 2:
+                        if player_score < 10:
+                            player_score += 12
+                        else:
+                            player_score += 2
+                    if player_aces == 3:
+                        if player_score < 9:
+                            player_score += 13
+                        else:
+                            player_score += 3
+                    if player_aces == 4:
+                        if player_score < 8:
+                            player_score += 14
+                        else:
+                            player_score += 4
+                    
+                    #Player Busts
+                    if player_score > 21:
+                        print(f"Player Hand: {player_hand}")
+                        print(f"Player has {player_score}")
+                        print("Player Busts.")
+                        print(f"Player Bank: ${bank}")
+                        keep_playing()
+                        break
+                    print(f"Player Hand: {player_hand}", end="")
+                    print(f"   Player has {player_score}")
+                elif play_double.upper() == "S":
+                    print(f"Player stands at {player_score}")
+                    break
+            else:
+                play = input("Choose your play. (H)it or (S)tand. You choose to :")
+                if play.upper() == "H":
+                    player_hand.append(deck[randint(0, len(deck) - 1)])
+                    deck.remove(player_hand[-1])
+                    player_score = 0
+                    player_aces = 0 
+                    for card in player_hand:
+                        if isinstance(card.value, int):
+                            player_score += card.value
+                        else:
+                            if card.value == "A":
+                                player_aces += 1
+                            else:
+                                player_score += 10
+                    if player_aces == 1:
+                        if player_score < 11:
+                            player_score += 11
+                        else:
+                            player_score += 1
+                    if player_aces == 2:
+                        if player_score < 10:
+                            player_score += 12
+                        else:
+                            player_score += 2
+                    if player_aces == 3:
+                        if player_score < 9:
+                            player_score += 13
+                        else:
+                            player_score += 3
+                    if player_aces == 4:
+                        if player_score < 8:
+                            player_score += 14
+                        else:
+                            player_score += 4
+                    
+                    #Player Busts
+                    if player_score > 21:
+                        print(f"Player Hand: {player_hand}")
+                        print(f"Player has {player_score}")
+                        print("Player Busts.")
+                        print(f"Player Bank: ${bank}")
+                        keep_playing()
+                        break
+                    print(f"Player Hand: {player_hand}", end="")
+                    print(f"   Player has {player_score}")
+                elif play.upper() == "S":
+                    print(f"Player stands at {player_score}")
+                    break
 
         #Dealer hand logic. Dealer stands on hard 17 and over. Dealer hits on soft 17 and under.
         print(f"Dealer Hand: {dealer_hand}", end="")
